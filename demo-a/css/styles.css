@@ -1,0 +1,413 @@
+/* ============================================================
+   Demo A - 派工排班時間軸 樣式（SMOG 品牌色版）
+   主色: #19A8B5 (teal/cyan)
+   ============================================================ */
+
+:root {
+  /* SMOG 品牌色票 */
+  --smog-primary:        #19A8B5;
+  --smog-primary-hover:  #14919E;
+  --smog-primary-light:  #E5F7F9;
+  --smog-primary-50:     #F0FAFB;
+  --smog-accent:         #4DD0DA;
+  --smog-accent-light:   #B8ECF0;
+
+  /* 中性色 */
+  --c-text:        #1F2937;
+  --c-text-mute:   #6B7280;
+  --c-border:      #E5E7EB;
+  --c-border-soft: #F3F4F6;
+  --c-bg:          #FAFBFC;
+  --c-bg-hover:    #F9FAFB;
+
+  /* 案件類型色（與品牌色協調） */
+  --case-online:    #F59E0B;   /* 線上丈量 - amber */
+  --case-onsite:    #10B981;   /* 現場丈量 - emerald */
+  --case-install:   #19A8B5;   /* 施作 - SMOG teal */
+}
+
+body {
+  font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* 字體尺寸統一變數 */
+:root {
+  --fs-xs:   14px;  /* 徽章、標籤 */
+  --fs-sm:   15px;  /* 副標、輔助 */
+  --fs-base: 17px;  /* 主要內文 */
+  --fs-md:   18px;  /* 卡片標題 */
+  --fs-lg:   20px;  /* 區塊標題 */
+  --fs-xl:   24px;  /* 頁面標題 */
+  --fs-2xl:  30px;  /* 大標題 */
+}
+
+/* ============================================================
+   1) 共用按鈕（pill 風格 - 參考 SMOG 官網）
+   ============================================================ */
+.btn-icon,
+.btn-secondary {
+  padding: 8px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--c-text);
+}
+.btn-icon:hover,
+.btn-secondary:hover {
+  background: var(--smog-primary-light);
+  border-color: var(--smog-primary);
+  color: var(--smog-primary);
+}
+
+.btn-primary {
+  padding: 9px 20px;
+  background: var(--smog-primary);
+  color: white;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  box-shadow: 0 2px 6px rgba(25, 168, 181, 0.25);
+}
+.btn-primary:hover {
+  background: var(--smog-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(25, 168, 181, 0.35);
+}
+
+.btn-outline {
+  padding: 9px 20px;
+  border: 1.5px solid var(--smog-primary);
+  color: var(--smog-primary);
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  transition: all 0.15s;
+}
+.btn-outline:hover {
+  background: var(--smog-primary-light);
+}
+
+.badge-count {
+  font-size: 14px;
+  padding: 2px 8px;
+  background: var(--smog-primary-light);
+  color: var(--smog-primary-hover);
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* ============================================================
+   2) 時間軸
+   ============================================================ */
+.timeline-grid {
+  display: grid;
+  /* grid-template-columns 由 JS 動態設定，依 timeRange 長度而定 */
+  grid-template-columns: 180px repeat(20, minmax(60px, 1fr));
+  border-top: 1px solid var(--c-border);
+}
+
+.time-cell {
+  border-right: 1px solid var(--c-border-soft);
+  border-bottom: 1px solid var(--c-border);
+  height: 80px;
+  position: relative;
+}
+
+.vehicle-cell {
+  border-right: 2px solid var(--c-border);
+  border-bottom: 1px solid var(--c-border);
+  background: white;
+  padding: 8px 12px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+}
+
+.time-header {
+  background: var(--c-bg);
+  border-right: 1px solid var(--c-border-soft);
+  border-bottom: 2px solid var(--c-border);
+  padding: 10px 8px;
+  font-size: 14px;
+  color: var(--c-text-mute);
+  text-align: center;
+  height: 44px;
+  font-weight: 500;
+}
+
+.corner {
+  background: var(--c-bg);
+  border-right: 2px solid var(--c-border);
+  border-bottom: 2px solid var(--c-border);
+  height: 44px;
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  padding: 12px;
+}
+
+/* ============================================================
+   3) 案件方塊（v0.3：左邊深色條，三行內容，可拖曳）
+   ============================================================ */
+.case-block {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  border-radius: 4px;
+  padding: 6px 10px 6px 12px;     /* 左邊多留給深色條 */
+  font-size: 14px;
+  cursor: grab;                    /* 拖曳手勢 */
+  overflow: hidden;
+  transition: all 0.15s;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  z-index: 5;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.case-block:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  z-index: 20;
+}
+.case-block:active { cursor: grabbing; }
+.case-block.dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+/* drop target highlight */
+.vehicle-row.row-drop-target {
+  background: rgba(25, 168, 181, 0.06);
+  outline: 2px dashed var(--smog-primary);
+  outline-offset: -4px;
+}
+
+/* 行車距離標示（兩個案件之間）*/
+.travel-gap-label {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  font-size: 14px;
+  color: #6B7280;
+  font-weight: 600;
+  pointer-events: auto;
+  z-index: 4;
+  user-select: none;
+  letter-spacing: 0.5px;
+}
+.travel-gap-label.insufficient {
+  color: #DC2626;
+  font-weight: 700;
+}
+
+/* 重新計算路線按鈕 */
+.btn-reload {
+  padding: 8px 16px;
+  border: 1.5px solid var(--c-border);
+  border-radius: 999px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--c-text-mute);
+  cursor: pointer;
+  transition: all 0.18s;
+  flex-shrink: 0;
+}
+.btn-reload:hover:not(:disabled) {
+  background: var(--smog-primary-light);
+  border-color: var(--smog-primary);
+  color: var(--smog-primary);
+}
+.btn-reload:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-reload.stale {
+  background: #FEF3C7;
+  border-color: #F59E0B;
+  color: #92400E;
+  animation: pulse-stale 1.6s ease-in-out infinite;
+}
+@keyframes pulse-stale {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50%      { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+
+/* 三行內容樣式（共用）*/
+.case-block .cb-title {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.case-block .cb-time {
+  font-size: 12px;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.case-block .cb-addr {
+  font-size: 11px;
+  opacity: 0.75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 配色：背景=淺色，左邊條=深色 */
+.case-線上丈量 {
+  background: #D1FAE5;
+  border-left: 4px solid #059669;     /* 深綠 */
+  color: #065F46;
+}
+.case-現場丈量 {
+  background: #DBEAFE;
+  border-left: 4px solid #2563EB;     /* 深藍 */
+  color: #1E40AF;
+}
+.case-施作 {
+  background: #FEF3C7;
+  border-left: 4px solid #D97706;     /* 深琥珀 */
+  color: #92400E;
+}
+
+/* ============================================================
+   4) 狀態徽章
+   ============================================================ */
+.status-badge {
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  display: inline-block;
+  font-weight: 500;
+}
+.status-諮詢中    { background: #F3F4F6; color: #4B5563; }
+.status-已排丈量  { background: #FEF3C7; color: #92400E; }
+.status-已丈量    { background: #FDE68A; color: #78350F; }
+.status-已成交    { background: #DCFCE7; color: #166534; }
+.status-已排施作  { background: var(--smog-primary-light); color: var(--smog-primary-hover); }
+.status-施作中    { background: var(--smog-accent-light); color: var(--smog-primary-hover); }
+.status-已完工    { background: #D1FAE5; color: #065F46; }
+.status-後補名單  { background: #FED7AA; color: #9A3412; }
+.status-跳票      { background: #FECACA; color: #991B1B; }
+.status-已取消    { background: #E5E7EB; color: #4B5563; }
+
+/* ============================================================
+   5) 車輛類型標籤
+   ============================================================ */
+.vehicle-tag-丈量 { background: #D1FAE5; color: #065F46; }
+.vehicle-tag-施作 { background: var(--smog-primary-light); color: var(--smog-primary-hover); }
+.vehicle-tag-兩用 { background: #EDE9FE; color: #5B21B6; }
+
+/* ============================================================
+   6) Modal
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  max-width: 640px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+/* ============================================================
+   7) 待排卡片
+   ============================================================ */
+.pending-card {
+  background: white;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pending-card:hover {
+  border-color: var(--smog-primary);
+  box-shadow: 0 4px 10px rgba(25, 168, 181, 0.12);
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   8) 建議卡片
+   ============================================================ */
+.suggestion-card {
+  border: 2px solid var(--c-border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.suggestion-card:hover {
+  border-color: var(--smog-primary);
+  background: var(--smog-primary-50);
+}
+.suggestion-card.best {
+  border-color: var(--smog-primary);
+  background: var(--smog-primary-light);
+}
+
+/* ============================================================
+   9) Scrollbar
+   ============================================================ */
+.scrollable-x { overflow-x: auto; }
+.scrollable-x::-webkit-scrollbar { height: 10px; }
+.scrollable-x::-webkit-scrollbar-thumb {
+  background: var(--c-border);
+  border-radius: 999px;
+}
+.scrollable-x::-webkit-scrollbar-thumb:hover {
+  background: var(--smog-primary);
+}
+
+/* ============================================================
+   10) Form input 統一
+   ============================================================ */
+input[type="text"],
+input[type="number"],
+input[type="time"],
+input[type="date"],
+select,
+textarea {
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="time"]:focus,
+input[type="date"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--smog-primary);
+  box-shadow: 0 0 0 3px rgba(25, 168, 181, 0.15);
+}

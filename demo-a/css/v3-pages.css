@@ -1,0 +1,671 @@
+/* ============================================================
+   v3-pages.css - v0.3 頁面樣式
+   Sections:
+     1) 通用表單元件
+     2) 通用表格
+     3) Vehicles 頁
+     4) Unscheduled 頁
+     5) People + 月曆班表
+     6) Kanban
+     7) Dashboard
+   ============================================================ */
+
+/* ---------- 1) 通用表單元件 ---------- */
+.form-label {
+  display: block;
+  font-size: var(--fs-sm);
+  color: var(--c-text-mute);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  font-size: var(--fs-base);
+  background: white;
+  transition: all 0.15s;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--smog-primary);
+  box-shadow: 0 0 0 3px rgba(25, 168, 181, 0.15);
+}
+.form-input[readonly] {
+  background: var(--c-bg);
+  color: var(--c-text-mute);
+}
+
+.filter-select {
+  padding: 8px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--c-text);
+}
+.filter-select:hover {
+  border-color: var(--smog-primary);
+}
+
+/* ---------- 2) 通用表格 ---------- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.data-table thead {
+  background: var(--c-bg);
+  border-bottom: 2px solid var(--c-border);
+}
+.data-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--c-text-mute);
+  font-weight: 600;
+}
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--c-border-soft);
+  vertical-align: middle;
+}
+.data-table tbody tr:hover {
+  background: var(--smog-primary-50);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--smog-primary);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.link-btn:hover {
+  background: var(--smog-primary-light);
+  text-decoration: underline;
+}
+.link-btn.link-danger {
+  color: #DC2626;
+}
+.link-btn.link-danger:hover {
+  background: #FEE2E2;
+}
+
+/* ---------- 3) Vehicles 頁 ---------- */
+.vehicles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.vehicle-summary-card {
+  background: white;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+.vehicle-summary-card:hover {
+  border-color: var(--smog-primary);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.06);
+  transform: translateY(-2px);
+}
+
+.vehicle-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.stat-block {
+  text-align: center;
+  padding: 8px 4px;
+  background: var(--c-bg);
+  border-radius: 8px;
+}
+.stat-num {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--c-text);
+}
+.stat-label {
+  font-size: var(--fs-xs);
+  color: var(--c-text-mute);
+  margin-top: 2px;
+}
+
+/* ---------- 4) Unscheduled 頁 ---------- */
+.source-badge {
+  font-size: var(--fs-xs);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.source-LINE { background: #DCFCE7; color: #166534; }
+.source-電話 { background: #FEF3C7; color: #92400E; }
+.source-官網 { background: #DBEAFE; color: #1E40AF; }
+.source-其他 { background: #F3F4F6; color: #4B5563; }
+
+/* ---------- 5) People + 月曆班表 ---------- */
+.shift-calendar {
+  border-collapse: collapse;
+  font-size: var(--fs-xs);
+  width: max-content;
+}
+
+.shift-calendar th, .shift-calendar td {
+  border: 1px solid var(--c-border);
+  padding: 0;
+  text-align: center;
+}
+
+.shift-name-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 5;
+  text-align: left !important;
+  padding: 8px 12px !important;
+  min-width: 120px;
+  border-right: 2px solid var(--c-border) !important;
+}
+
+.shift-calendar thead .shift-name-col {
+  background: var(--c-bg);
+  font-weight: 600;
+}
+
+.shift-day-col {
+  width: 36px;
+  background: var(--c-bg);
+  padding: 6px 4px !important;
+  font-weight: 600;
+}
+.shift-day-col.weekend {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.shift-dow {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--c-text-mute);
+  margin-top: 1px;
+}
+
+.shift-cell {
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  transition: all 0.15s;
+}
+.shift-cell:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 2;
+  position: relative;
+}
+
+/* ---------- 6) Kanban ---------- */
+.kanban-section {
+  padding: 0 24px;
+}
+.kanban-section:first-child { padding-top: 24px; }
+.kanban-section:last-child { padding-bottom: 24px; }
+
+.kanban-section-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--c-text);
+}
+
+.kanban-board {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.kanban-board::-webkit-scrollbar { height: 8px; }
+.kanban-board::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 4px; }
+
+.kanban-col {
+  flex: 0 0 240px;
+  background: var(--c-bg);
+  border-radius: 10px;
+  border: 1px solid var(--c-border);
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+}
+
+.kanban-col-header {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--c-border);
+  background: white;
+  border-radius: 10px 10px 0 0;
+}
+
+.kanban-col-count {
+  background: var(--c-border);
+  color: var(--c-text);
+  padding: 1px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.kanban-col-body {
+  padding: 8px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 120px;
+  transition: background 0.15s;
+}
+.kanban-col-body.drop-hover {
+  background: var(--smog-primary-light);
+}
+
+.kanban-card {
+  background: white;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: var(--fs-sm);
+  transition: all 0.15s;
+  user-select: none;
+}
+.kanban-card:hover {
+  border-color: var(--smog-primary);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.06);
+}
+.kanban-card.dragging {
+  opacity: 0.5;
+}
+
+.kanban-tag {
+  font-size: var(--fs-xs);
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.tag-type-現場丈量 { background: #D1FAE5; color: #065F46; }
+.tag-type-線上丈量 { background: #FEF3C7; color: #78350F; }
+.tag-type-施作    { background: var(--smog-primary-light); color: var(--smog-primary-hover); }
+.tag-amount       { background: #F0FDF4; color: #15803D; }
+
+/* ---------- 7) Dashboard ---------- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.kpi-card {
+  padding: 18px 20px;
+  border-radius: 12px;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+}
+
+.kpi-blue    { background: linear-gradient(135deg, #2563EB, #1D4ED8); }
+.kpi-amber   { background: linear-gradient(135deg, #D97706, #B45309); }
+.kpi-emerald { background: linear-gradient(135deg, #059669, #047857); }
+.kpi-teal    { background: linear-gradient(135deg, #19A8B5, #14919E); }
+
+.kpi-label {
+  font-size: var(--fs-sm);
+  opacity: 0.9;
+  font-weight: 500;
+}
+.kpi-value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  margin: 4px 0 6px;
+}
+.kpi-sub {
+  font-size: var(--fs-xs);
+  opacity: 0.85;
+}
+
+/* ============================================================
+   日期橫條 (v0.4 - 排程頁面)
+   ============================================================ */
+.date-strip {
+  flex: 1;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: 2px 0;
+  -ms-overflow-style: none;
+}
+.date-strip::-webkit-scrollbar { height: 4px; }
+.date-strip::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 999px; }
+
+.date-strip-today {
+  background: white;
+  border: 1.5px solid var(--c-border);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.date-strip-today:hover {
+  background: var(--smog-primary-50);
+  border-color: var(--smog-primary);
+  color: var(--smog-primary);
+}
+
+.date-strip-btn {
+  background: white;
+  border: 1.5px solid var(--c-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+  min-width: 54px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  flex-shrink: 0;
+  color: var(--c-text);
+}
+.date-strip-btn:hover {
+  background: var(--c-bg-hover);
+  border-color: var(--smog-primary);
+}
+.date-strip-btn.active {
+  background: var(--c-text);
+  border-color: var(--c-text);
+  color: white;
+}
+.date-strip-btn.is-today:not(.active) {
+  border-color: var(--smog-primary);
+  color: var(--smog-primary);
+  font-weight: 600;
+}
+.date-strip-btn.is-weekend:not(.active) {
+  color: #EF4444;
+}
+.date-strip-mmdd {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.date-strip-dow {
+  font-size: 11px;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* ============================================================
+   Sidebar 分公司下拉 (v0.4)
+   ============================================================ */
+/* ============================================================
+   Location Filter (多選分區 v0.5)
+   ============================================================ */
+
+.location-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: var(--c-bg-soft, #F9FAFB);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.location-filter-label {
+  font-size: 13px;
+  color: var(--c-text-mute, #6B7280);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.location-filter-btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  background: white;
+  border: 1px solid var(--c-border, #E5E7EB);
+  border-radius: 16px;
+  cursor: pointer;
+  color: #4B5563;
+  transition: all 0.15s;
+  user-select: none;
+}
+
+.location-filter-btn:hover {
+  background: var(--c-bg-hover, #F3F4F6);
+  border-color: var(--c-primary, #3B82F6);
+}
+
+.location-filter-btn.active {
+  background: var(--c-primary, #3B82F6);
+  color: white;
+  border-color: var(--c-primary, #3B82F6);
+  font-weight: 600;
+}
+
+.location-filter-btn[data-loc="__all__"].active {
+  background: #6366F1;
+  border-color: #6366F1;
+}
+
+
+/* ============================================================
+   Vehicle Team Page (車組配對 月視圖)
+   ============================================================ */
+
+.vt-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12px;
+}
+
+.vt-table th,
+.vt-table td {
+  border: 1px solid #E5E7EB;
+  padding: 4px 6px;
+  vertical-align: top;
+}
+
+.vt-vehicle-th {
+  position: sticky;
+  left: 0;
+  background: #F9FAFB;
+  z-index: 2;
+  min-width: 130px;
+  text-align: left;
+  padding: 8px;
+}
+
+.vt-date-th {
+  background: #F9FAFB;
+  text-align: center;
+  min-width: 70px;
+  padding: 4px;
+}
+
+.vt-date-th.weekend {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.vt-date-th.today {
+  background: #DBEAFE;
+  color: #1E40AF;
+  font-weight: 700;
+}
+
+.vt-date-num {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vt-date-dow {
+  font-size: 10px;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+.vt-cell {
+  background: white;
+  cursor: pointer;
+  min-width: 70px;
+  min-height: 50px;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.vt-cell:hover {
+  background: #EFF6FF;
+}
+
+.vt-cell.weekend {
+  background: #FFFBEB;
+}
+
+.vt-cell.weekend:hover {
+  background: #FEF3C7;
+}
+
+.vt-chip {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 1px 2px;
+  font-size: 11px;
+  background: #E5E7EB;
+  color: #374151;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.vt-chip.driver {
+  background: #DBEAFE;
+  color: #1E40AF;
+  font-weight: 600;
+}
+
+.vt-empty {
+  display: inline-block;
+  width: 100%;
+  text-align: center;
+  color: #D1D5DB;
+  font-size: 18px;
+  padding: 6px 0;
+}
+
+.vt-branch-th,
+.vt-branch-td {
+  position: sticky;
+  left: 0;
+  background: #F9FAFB;
+  z-index: 3;
+  min-width: 90px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4B5563;
+  padding: 8px;
+  border-right: 2px solid #E5E7EB;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.vt-branch-td {
+  background: #FAFAFA;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+/* 車輛欄要右移到分部欄後面 */
+.vt-vehicle-th {
+  left: 90px;
+}
+
+
+/* Tab Bar (未排案件 2 tab) */
+.tab-bar .tab-btn {
+  color: #6B7280;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.tab-bar .tab-btn:hover {
+  color: #111827;
+  background: #F9FAFB !important;
+}
+.tab-bar .tab-btn.active {
+  color: #2563EB !important;
+  font-weight: 700;
+  border-bottom: 3px solid #2563EB !important;
+}
+.tab-bar .tab-btn.active span {
+  background: #DBEAFE !important;
+  color: #1E40AF;
+}
+
+
+/* ============================================================
+   新增諮詢 Modal — 分段卡片
+   ============================================================ */
+
+.form-section {
+  background: #F9FAFB;
+  border: 1px solid #E5E7EB;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.form-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #E5E7EB;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.form-section-body {
+  /* sub-style defined inline per section */
+}
+
+.form-hint {
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 4px;
+}

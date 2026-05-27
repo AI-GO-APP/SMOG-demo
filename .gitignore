@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# 備份檔
+*.bak
+
+# 編輯器
+.vscode/
+.idea/
+
+# Node
+node_modules/
+
+# Env
+.env
+.env.local
+
+# 內部文件（不公開到 public repo）
+SMOG-DB-架構文件-*.md
+SMOG-DB-變更說明-*.md
+客戶-Demo-流程腳本.md
+SMOG-ERD-*.dbml
+SMOG-ERD.dbml
+smog-schema-v0.3.sql
+
+# demo-b（舊版本）
+demo-b/

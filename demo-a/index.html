@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SMOG 派工排班系統</title>
+
+<!-- 第三方 CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- ⭐ Supabase JS Client -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+<!-- 自訂樣式 -->
+<link rel="stylesheet" href="css/styles.css" />
+<link rel="stylesheet" href="css/v2-extras.css" />
+<link rel="stylesheet" href="css/layout.css" />
+<link rel="stylesheet" href="css/v3-pages.css" />
+</head>
+<body class="bg-gray-100">
+
+<!-- ================== 應用主架構 ================== -->
+<div class="app-layout">
+
+  <!-- ===== 側邊欄 ===== -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- ===== 主內容區 ===== -->
+  <div class="main-area">
+
+    <!-- 頁面 Top Bar（只放動作按鈕，標題交給各頁面自己處理）-->
+    <header class="main-topbar" id="main-topbar" style="justify-content:flex-end;">
+      <div id="topbar-actions" style="display:flex; align-items:center; gap:12px;">
+        <button id="new-inquiry-btn" class="btn-primary">+ 新增諮詢</button>
+      </div>
+    </header>
+
+    <!-- 頁面內容（router 會在這裡 render）-->
+    <main class="main-content" id="page-content"></main>
+  </div>
+</div>
+
+<!-- Modal 容器 -->
+<div id="modal-root"></div>
+
+<!-- ================== Scripts ================== -->
+<!-- ⭐ Supabase Client（要在 mock-data 之前載入）-->
+<script src="js/config.js"></script>
+<script src="js/supabase-client.js"></script>
+<!-- 資料層 -->
+<script src="js/mock-data.js"></script>
+<!-- ⭐ DB 載入器（把 DB 資料寫進 MockData 同名變數）-->
+<script src="js/data-loader.js"></script>
+<!-- ⭐ DB 寫入器（CRUD wrapper）-->
+<script src="js/data-writer.js"></script>
+<!-- 工具 -->
+<script src="js/utils.js"></script>
+<!-- 全域狀態 -->
+<script src="js/state.js"></script>
+<!-- 服務層 -->
+<script src="js/services/suggestion-engine.js"></script>
+<script src="js/services/route-service.js"></script>
+<script src="js/services/swap-detector.js"></script>
+<!-- UI 元件 -->
+<script src="js/components/timeline.js"></script>
+<script src="js/components/pending-list.js"></script>
+<script src="js/components/case-modal.js"></script>
+<script src="js/components/new-case-modal.js"></script>
+<script src="js/components/new-inquiry-modal.js"></script>
+<script src="js/components/suggestions-modal.js"></script>
+<script src="js/components/single-vehicle-map-modal.js"></script>
+<script src="js/components/all-vehicles-map.js"></script>
+<script src="js/components/assignment-modal.js"></script>
+<!-- 設定中心 子元件（settings page 會用到 DefaultsSettings）-->
+<script src="js/components/vehicle-settings.js"></script>
+<script src="js/components/person-settings.js"></script>
+<script src="js/components/defaults-settings.js"></script>
+<script src="js/components/settings-modal.js"></script>
+<!-- Router + Sidebar -->
+<script src="js/router.js"></script>
+<script src="js/components/location-filter.js"></script>
+<script src="js/components/sidebar.js"></script>
+<!-- 頁面 -->
+<script src="js/pages/schedule-page.js"></script>
+<script src="js/pages/vehicles-page.js"></script>
+<script src="js/pages/people-page.js"></script>
+<script src="js/pages/vehicle-team-page.js"></script>
+<script src="js/pages/unscheduled-page.js"></script>
+<script src="js/pages/kanban-page.js"></script>
+<script src="js/pages/dashboard-page.js"></script>
+<script src="js/pages/settings-page.js"></script>
+<script src="js/pages/stub-pages.js"></script>
+<!-- 入口 -->
+<script src="js/main.js"></script>
+
+</body>
+</html>
