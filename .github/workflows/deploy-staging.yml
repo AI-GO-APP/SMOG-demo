@@ -1,17 +1,41 @@
-name: 部署到 Staging
+# 備用 workflow — 如果 reusable workflow 不能呼叫，改用這個（直接寫）
+# 使用：把這檔改名為 deploy-staging.yml 取代原本的
+
+name: 部署到 Staging (Direct)
 
 on:
-  workflow_dispatch:    # 可在 GitHub Actions 頁面手動觸發
+  workflow_dispatch:
   push:
     branches: [ main ]
     paths-ignore:
       - '*.md'
       - 'docs/**'
-      - 'sql/**'
 
 jobs:
   deploy:
-    uses: AI-GO-APP/.github/.github/workflows/staging-deploy.yml@main
-    with:
-      project-name: ${{ github.event.repository.name }}
-    secrets: inherit
+    name: 部署 ${{ github.event.repository.name }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: staging-deploy-${{ github.event.repository.name }}
+      cancel-in-progress: false
+
+    steps:
+    - name: 產生 GitHub App Token
+      id: app-token
+      uses: actions/create-github-app-token@v1
+      with:
+        app-id: ${{ secrets.GH_APP_ID }}
+        private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+
+    - name: 透過 SSH 部署到 Staging VM
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.STAGING_HOST }}
+        username: deploy
+        key: ${{ secrets.STAGING_SSH_KEY }}
+        command_timeout: 20m
+        envs: GITHUB_TOKEN
+        script: /opt/deploy-config/deploy.sh "${{ github.repository_owner }}" "${{ github.event.repository.name }}" "auto"
+      env:
+        GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
