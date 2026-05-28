@@ -492,7 +492,7 @@
   border-collapse: collapse;
   width: max-content;
   min-width: 100%;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .vt-table th,
@@ -507,16 +507,18 @@
   left: 0;
   background: #F9FAFB;
   z-index: 2;
-  min-width: 130px;
-  text-align: left;
-  padding: 8px;
+  min-width: 145px;
+  text-align: center;
+  padding: 10px 8px;
+  font-size: 15px;
 }
 
 .vt-date-th {
   background: #F9FAFB;
   text-align: center;
-  min-width: 70px;
-  padding: 4px;
+  min-width: 90px;
+  padding: 6px 4px;
+  font-size: 14px;
 }
 
 .vt-date-th.weekend {
@@ -531,12 +533,12 @@
 }
 
 .vt-date-num {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .vt-date-dow {
-  font-size: 10px;
+  font-size: 12px;
   color: #9CA3AF;
   margin-top: 2px;
 }
@@ -544,10 +546,13 @@
 .vt-cell {
   background: white;
   cursor: pointer;
-  min-width: 70px;
-  min-height: 50px;
+  min-width: 130px;
+  min-height: 165px;  /* 預設容納 4 名 chip (含 padding) */
   transition: background 0.15s;
   position: relative;
+  vertical-align: top;
+  text-align: center;
+  padding: 6px;
 }
 
 .vt-cell:hover {
@@ -563,14 +568,17 @@
 }
 
 .vt-chip {
-  display: inline-block;
-  padding: 1px 6px;
-  margin: 1px 2px;
-  font-size: 11px;
+  display: block;
+  padding: 5px 10px;
+  margin: 3px auto;
+  font-size: 16px;
   background: #E5E7EB;
   color: #374151;
-  border-radius: 10px;
+  border-radius: 12px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .vt-chip.driver {
@@ -580,12 +588,12 @@
 }
 
 .vt-empty {
-  display: inline-block;
+  display: block;
   width: 100%;
   text-align: center;
   color: #D1D5DB;
-  font-size: 18px;
-  padding: 6px 0;
+  font-size: 24px;
+  padding: 40px 0;
 }
 
 .vt-branch-th,
@@ -594,13 +602,13 @@
   left: 0;
   background: #F9FAFB;
   z-index: 3;
-  min-width: 90px;
-  font-size: 12px;
+  min-width: 100px;
+  font-size: 14px;
   font-weight: 600;
   color: #4B5563;
-  padding: 8px;
+  padding: 10px 8px;
   border-right: 2px solid #E5E7EB;
-  text-align: left;
+  text-align: center;
   white-space: nowrap;
 }
 
@@ -610,9 +618,15 @@
   color: #6B7280;
 }
 
-/* 車輛欄要右移到分部欄後面 */
+/* 車輛欄要右移到分部欄後面 + 強制置中 */
 .vt-vehicle-th {
-  left: 90px;
+  left: 100px !important;
+  text-align: center !important;
+}
+
+.vt-branch-th,
+.vt-branch-td {
+  text-align: center !important;
 }
 
 
