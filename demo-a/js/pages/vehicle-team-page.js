@@ -25,6 +25,7 @@ const VehicleTeamPage = (() => {
             <p style="font-size:var(--fs-sm); color:var(--c-text-mute); margin-top:4px;">一次排整月的車↔人配對，點格子編輯</p>
           </div>
           <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn-primary" id="vt-edit-person-btn" title="批次編輯某人整月排班">📅 編輯個人排班</button>
             <button class="btn-secondary" id="vt-prev-month" title="上個月">◀</button>
             <input type="month" id="vt-month-picker" value="${_yyyymm}" class="form-input" style="width:140px;" />
             <button class="btn-secondary" id="vt-next-month" title="下個月">▶</button>
@@ -53,6 +54,10 @@ const VehicleTeamPage = (() => {
     container.querySelector('#vt-today').onclick = () => {
       _yyyymm = new Date().toISOString().slice(0, 7);
       render(container);
+    };
+
+    container.querySelector('#vt-edit-person-btn').onclick = () => {
+      _openPersonPicker();
     };
 
     _loadAndRender();
@@ -207,6 +212,65 @@ const VehicleTeamPage = (() => {
           }, 500);
         } else {
           alert('AssignmentModal 未載入');
+        }
+      };
+    });
+  }
+
+  /** 開人員選擇器 — 簡單版用 prompt 列清單 */
+  function _openPersonPicker() {
+    const branchPeople = MockData.PEOPLE.filter(p => LocationFilter.isInFilter(p.locationCode))
+      .sort((a, b) => (a.id || '').localeCompare(b.id || ''));
+
+    if (branchPeople.length === 0) {
+      alert('沒有符合條件的人員（請調整分區）');
+      return;
+    }
+
+    // 用快速選擇 dialog
+    const html = branchPeople.map((p, i) =>
+      `<option value="${p.id}">${p.id} - ${p.name} (${p.locationName || ''})</option>`
+    ).join('');
+
+    // 簡單做：用 prompt + 數字選 (或 select dialog)
+    // 為了流暢，建立一個小 dialog
+    _showPersonPickerDialog(branchPeople);
+  }
+
+  function _showPersonPickerDialog(people) {
+    // 移除舊的
+    const old = document.getElementById('vt-person-picker-dialog');
+    if (old) old.remove();
+
+    const dialog = document.createElement('div');
+    dialog.id = 'vt-person-picker-dialog';
+    dialog.className = 'modal-overlay';
+    dialog.style.display = 'flex';
+    dialog.innerHTML = `
+      <div class="modal-content" style="padding:20px; max-width:420px; width:90%;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 style="margin:0; font-size:16px; font-weight:700;">選擇要編輯排班的人員</h3>
+          <button class="vt-pp-close" style="background:none; border:none; font-size:22px; color:#9CA3AF; cursor:pointer;">×</button>
+        </div>
+        <div style="max-height:50vh; overflow-y:auto;">
+          ${people.map(p => `
+            <button class="vt-pp-item" data-pid="${p.id}" style="display:block; width:100%; text-align:left; padding:10px 12px; margin-bottom:6px; background:#F9FAFB; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">
+              <strong>${p.name}</strong> <span style="color:#9CA3AF;">(${p.id})</span>
+              <span style="float:right; font-size:12px; color:#6B7280;">${p.locationName || ''}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+    document.getElementById('modal-root').appendChild(dialog);
+
+    dialog.querySelector('.vt-pp-close').onclick = () => dialog.remove();
+    dialog.querySelectorAll('.vt-pp-item').forEach(btn => {
+      btn.onclick = () => {
+        const pid = btn.dataset.pid;
+        dialog.remove();
+        if (typeof PersonAssignmentModal !== 'undefined') {
+          PersonAssignmentModal.open(pid, _yyyymm);
         }
       };
     });

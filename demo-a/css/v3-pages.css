@@ -669,3 +669,89 @@
   color: #9CA3AF;
   margin-top: 4px;
 }
+
+
+/* ============================================================
+   PersonAssignmentModal (個人月排班批次編輯)
+   ============================================================ */
+
+.pam-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12px;
+}
+
+.pam-table th,
+.pam-table td {
+  border: 1px solid #E5E7EB;
+  padding: 4px 6px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.pam-veh-th {
+  position: sticky;
+  left: 0;
+  background: #F9FAFB;
+  z-index: 2;
+  min-width: 100px;
+  text-align: left;
+  padding: 6px 8px;
+  font-weight: 600;
+}
+
+.pam-date-th {
+  min-width: 36px;
+  background: #F9FAFB;
+  font-weight: 600;
+}
+
+.pam-date-th.weekend {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.pam-date-th.today {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+
+.pam-cell {
+  min-width: 36px;
+  height: 32px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  background: white;
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.pam-cell:hover:not(.off) {
+  background: #DBEAFE;
+}
+
+.pam-cell.weekend {
+  background: #FFFBEB;
+}
+
+.pam-cell.weekend:hover:not(.off) {
+  background: #FEF3C7;
+}
+
+.pam-cell.selected {
+  background: #10B981;
+  color: white;
+}
+
+.pam-cell.selected:hover {
+  background: #059669;
+}
+
+.pam-cell.off {
+  background: #D1D5DB;
+  color: #6B7280;
+  cursor: not-allowed;
+  font-size: 11px;
+}
