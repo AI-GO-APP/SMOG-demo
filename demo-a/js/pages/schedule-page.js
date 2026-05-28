@@ -77,12 +77,21 @@ const SchedulePage = (() => {
     // 綁定「重新計算路線」按鈕
     const reloadBtn = document.getElementById('reload-routes-btn');
     if (reloadBtn) {
-      reloadBtn.onclick = () => {
+      reloadBtn.onclick = async () => {
+        const origText = reloadBtn.textContent;
         reloadBtn.disabled = true;
         reloadBtn.textContent = '⏳ 計算中...';
-        AllVehiclesMap.reloadRoutes().finally(() => {
+        try {
+          await AllVehiclesMap.reloadRoutes();
+          reloadBtn.textContent = '✅ 完成';
+          setTimeout(() => { reloadBtn.textContent = origText; }, 1500);
+        } catch (err) {
+          console.error('[reload-routes] failed:', err);
+          alert('重算失敗：' + err.message);
+          reloadBtn.textContent = origText;
+        } finally {
           reloadBtn.disabled = false;
-        });
+        }
       };
     }
   }
@@ -174,10 +183,12 @@ const SchedulePage = (() => {
   }
 
   function _bindWeightSliders() {
+    // 權重 slider 已被移除 — 加 guard 避免 null.value 炸掉後面的綁定
     ['distance', 'gap', 'amount'].forEach(k => {
       const slider = document.getElementById(`w-${k}`);
       const valSpan = document.getElementById(`w-${k}-val`);
-      // 從 State 還原當前值
+      if (!slider || !valSpan) return;
+
       const w = State.get('weights');
       slider.value = Math.round(w[k] * 100);
       valSpan.textContent = slider.value + '%';
