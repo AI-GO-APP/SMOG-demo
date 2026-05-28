@@ -259,6 +259,55 @@ const DataLoader = (() => {
     console.log(`[DataLoader] shifts: DB ${data.length} 筆（覆蓋 ${overrideCount}, 新增 ${appendCount}），mock 保留 ${MockData.SHIFTS.length - appendCount} 筆`);
   }
 
+
+  async function loadCommunities() {
+    const { data, error } = await SupabaseClient
+      .from('communities')
+      .select('*, location:company_locations(code, name)')
+      .is('deleted_at', null)
+      .order('code');
+    if (error) {
+      console.warn('[DataLoader] loadCommunities skipped:', error.message);
+      MockData.COMMUNITIES = [];
+      return;
+    }
+    MockData.COMMUNITIES = (data || []).map(c => ({
+      id:           c.code || c.id,
+      _dbId:        c.id,
+      code:         c.code,
+      name:         c.name,
+      address:      c.address,
+      city:         c.city,
+      district:     c.district,
+      lat:          c.lat ? Number(c.lat) : null,
+      lng:          c.lng ? Number(c.lng) : null,
+      locationCode: c.location?.code || null,
+      locationName: c.location?.name || null,
+    }));
+    console.log(`[DataLoader] communities: ${MockData.COMMUNITIES.length} 筆`);
+  }
+
+  async function loadGroupPurchases() {
+    const { data, error } = await SupabaseClient
+      .from('group_purchases')
+      .select('*')
+      .is('deleted_at', null)
+      .order('code');
+    if (error) {
+      console.warn('[DataLoader] loadGroupPurchases skipped:', error.message);
+      MockData.GROUP_PURCHASES = [];
+      return;
+    }
+    MockData.GROUP_PURCHASES = (data || []).map(g => ({
+      id:    g.code || g.id,
+      _dbId: g.id,
+      code:  g.code,
+      name:  g.name,
+      notes: g.notes,
+    }));
+    console.log(`[DataLoader] group_purchases: ${MockData.GROUP_PURCHASES.length} 筆`);
+  }
+
   // ============ 主入口 ============
 
   async function loadLocations() {
@@ -304,6 +353,10 @@ const DataLoader = (() => {
     // shifts 獨立
     await loadShifts();
 
+    // 對齊 Ragic schema 的新表
+    await loadCommunities();
+    await loadGroupPurchases();
+
     const elapsed = Date.now() - t0;
     console.log(`[DataLoader] ✅ 全部載入完成 (${elapsed}ms)`, {
       vehicles: MockData.VEHICLES.length,
@@ -316,6 +369,8 @@ const DataLoader = (() => {
   return {
     loadAll,
     loadLocations,
+    loadCommunities,
+    loadGroupPurchases,
     loadDailyAssignmentsForDate,
     mapEnum,
     ENUM_MAP,

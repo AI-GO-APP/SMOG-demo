@@ -241,7 +241,20 @@ const DataWriter = (() => {
       estimated_amount:   data.amount       || null,
       notes:              data.notes        || null,
       is_confirmed:       !!(data.vehicleId && data.start),  // 已派車且有時間 = 已確認
+      case_nature:        data.caseNature || 'normal',
+      venue_type:         data.venueType || null,
+      floor_plan:         data.floorPlan || null,
     };
+
+    // 社區 / 團購 FK 解析 (用 code 找 _dbId)
+    if (data.communityCode) {
+      const community = (MockData.COMMUNITIES || []).find(c => c.code === data.communityCode);
+      if (community && community._dbId) insertData.community_id = community._dbId;
+    }
+    if (data.groupPurchaseCode) {
+      const gp = (MockData.GROUP_PURCHASES || []).find(g => g.code === data.groupPurchaseCode);
+      if (gp && gp._dbId) insertData.group_purchase_id = gp._dbId;
+    }
 
     // 注意 schema CHECK：scheduled_date / scheduled_start 必須一起 NULL 或一起 NOT NULL
     if (!insertData.scheduled_date) insertData.scheduled_start = null;

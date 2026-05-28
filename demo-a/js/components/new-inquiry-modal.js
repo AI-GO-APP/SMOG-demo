@@ -59,9 +59,16 @@ const NewInquiryModal = (() => {
               <div>
                 <label class="form-label">來源 *</label>
                 <select name="source" class="form-input">
-                  <option value="LINE">LINE</option>
-                  <option value="電話">電話</option>
-                  <option value="官網">官網</option>
+                  <option value="LINE">官方 LINE</option>
+                  <option value="FB Messenger">FB Messenger</option>
+                  <option value="Live Chat">Live Chat</option>
+                  <option value="管家號">管家號</option>
+                  <option value="電話">電話聯繫</option>
+                  <option value="社區報名表">社區報名表</option>
+                  <option value="一人報名表">一人報名表</option>
+                  <option value="公播客">公播客</option>
+                  <option value="商務客">商務客</option>
+                  <option value="門市">門市</option>
                   <option value="其他">其他</option>
                 </select>
               </div>
@@ -93,6 +100,34 @@ const NewInquiryModal = (() => {
                     <option value="house">透天</option>
                     <option value="two_household">兩戶</option>
                     <option value="neighbors_combined">鄰居一起</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                  <label class="form-label">案場類型</label>
+                  <select name="venue_type" class="form-input">
+                    <option value="">-- 不指定 --</option>
+                    <option value="building">大樓</option>
+                    <option value="townhouse">透天</option>
+                    <option value="apartment">公寓</option>
+                    <option value="condo">華廈</option>
+                    <option value="other">其他</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="form-label">格局</label>
+                  <select name="floor_plan" class="form-input">
+                    <option value="">-- 不指定 --</option>
+                    <option value="studio">套房</option>
+                    <option value="one_room">一房一廳</option>
+                    <option value="two_bedroom">兩房</option>
+                    <option value="three_bedroom">三房</option>
+                    <option value="four_plus">四房以上</option>
+                    <option value="large_space">大面積空間</option>
+                    <option value="other">其他</option>
+                    <option value="pending">待確認</option>
                   </select>
                 </div>
               </div>
@@ -171,6 +206,27 @@ const NewInquiryModal = (() => {
             </div>
           </section>
 
+          <!-- 區塊 進階 (選填) -->
+          <section class="form-section">
+            <div class="form-section-title">🏘️ 進階（選填）</div>
+            <div class="form-section-body" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div>
+                <label class="form-label">社區</label>
+                <select name="community" class="form-input" id="inquiry-community-select">
+                  <option value="">-- 不指定 --</option>
+                </select>
+                <div class="form-hint">如客戶屬於某社區 / 案場</div>
+              </div>
+              <div>
+                <label class="form-label">團購</label>
+                <select name="group_purchase" class="form-input" id="inquiry-group-select">
+                  <option value="">-- 不指定 --</option>
+                </select>
+                <div class="form-hint">如報名某波團購</div>
+              </div>
+            </div>
+          </section>
+
           <!-- 區塊 4: 備註 -->
           <section class="form-section">
             <div class="form-section-title">📝 備註</div>
@@ -213,6 +269,24 @@ const NewInquiryModal = (() => {
       o.value = l.code;
       o.textContent = l.name;
       branchSel.appendChild(o);
+    });
+
+    // 填充社區下拉
+    const communitySel = div.querySelector('#inquiry-community-select');
+    (MockData.COMMUNITIES || []).forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.code || c.id;
+      o.textContent = `${c.name}${c.locationName ? ' (' + c.locationName + ')' : ''}`;
+      communitySel.appendChild(o);
+    });
+
+    // 填充團購下拉
+    const groupSel = div.querySelector('#inquiry-group-select');
+    (MockData.GROUP_PURCHASES || []).forEach(g => {
+      const o = document.createElement('option');
+      o.value = g.code || g.id;
+      o.textContent = `${g.code} - ${g.name}`;
+      groupSel.appendChild(o);
     });
 
     /** 從 lat/lng 推算最近分區 */
@@ -356,6 +430,10 @@ const NewInquiryModal = (() => {
       const preferredDate = fd.get('preferred_date') || null;
       const preferredStart = fd.get('preferred_start') || null;
       const csEstimatedDuration = fd.get('cs_estimated_duration') || null;
+      const venueType = fd.get('venue_type') || null;
+      const floorPlan = fd.get('floor_plan') || null;
+      const communityCode = fd.get('community') || null;
+      const groupPurchaseCode = fd.get('group_purchase') || null;
 
       // 算 duration：客服手動 > 系統自動
       function _calcSysDur(type, nature, brief) {
@@ -417,6 +495,10 @@ const NewInquiryModal = (() => {
           notes:               newCase.notes,
           caseNature:          caseNature,
           briefingAttendedAt:  briefingDate,
+          venueType:           venueType,
+          floorPlan:           floorPlan,
+          communityCode:       communityCode,
+          groupPurchaseCode:   groupPurchaseCode,
         });
         newCase._dbId = dbId;
         MockData.CASES.push(newCase);
