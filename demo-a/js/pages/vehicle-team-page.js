@@ -167,12 +167,12 @@ const VehicleTeamPage = (() => {
       return `
         <tr>
           <td class="vt-branch-td">${v.locationName || v.locationCode || '-'}</td>
-          <th class="vt-vehicle-th">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span class="vehicle-color-dot" style="background:${v.color}; width:10px; height:10px;"></span>
-              <strong>${v.name}</strong>
+          <th class="vt-vehicle-th" style="text-align:center;">
+            <div style="text-align:center;">
+              <span class="vehicle-color-dot" style="background:${v.color}; width:12px; height:12px; vertical-align:middle; margin-right:6px;"></span>
+              <strong style="font-size:16px; vertical-align:middle;">${v.name}</strong>
             </div>
-            <div style="font-size:11px; color:#9CA3AF;">${v.id} · ${v.type}</div>
+            <div style="font-size:13px; color:#9CA3AF; margin-top:4px; text-align:center;">${v.id} · ${v.type}</div>
           </th>
           ${cells.join('')}
         </tr>

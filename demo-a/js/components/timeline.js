@@ -13,6 +13,7 @@ const TimelineComponent = (() => {
     const range = State.get('timeRange');
     const cellCount = (range.end - range.start) / range.step;
     const grid = document.getElementById(containerId);
+    if (!grid) return;  // 不在排程頁就跳過
     grid.innerHTML = '';
     // 動態 grid 欄數 (避免 CSS 寫死 22 跟實際格數不符)
     grid.style.gridTemplateColumns = `180px repeat(${cellCount}, minmax(60px, 1fr))`;

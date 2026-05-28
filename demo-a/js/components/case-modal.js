@@ -91,12 +91,22 @@ const CaseModalComponent = (() => {
         c.date = null;
         c.start = null;
       }
-      TimelineComponent.render();
-      PendingListComponent.render();
-      // 如果 kanban 頁面正在顯示，重新渲染
-      const root = document.getElementById('page-content');
-      if (root && root.querySelector('.kanban-board')) {
-        Router.navigate('kanban');
+      // 安全渲染：只在元素存在時才呼叫
+      try {
+        if (typeof TimelineComponent !== 'undefined' &&
+            (document.getElementById('timeline-container') || document.getElementById('timeline-grid'))) {
+          TimelineComponent.render();
+        }
+        if (typeof PendingListComponent !== 'undefined') {
+          PendingListComponent.render();
+        }
+        // 如果目前頁面是任何含案件清單的，重新 navigate refresh
+        if (typeof Router !== 'undefined') {
+          const cur = Router.getCurrent();
+          if (cur) Router.navigate(cur);
+        }
+      } catch (renderErr) {
+        console.warn('[case-modal] post-update render skipped:', renderErr);
       }
       close();
     } catch (err) {
