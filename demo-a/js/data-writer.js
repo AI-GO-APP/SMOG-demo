@@ -159,11 +159,14 @@ const DataWriter = (() => {
     // 先看是否已存在
     const existingId = await _customerIdByPhone(data.phone);
     if (existingId) {
-      // 既有客戶 → 若有提供 briefing_attended_at 就更新
-      if (data.briefingAttendedAt) {
+      // 既有客戶 → 若有提供 briefing_attended_at 或 tags 就更新
+      const patch = {};
+      if (data.briefingAttendedAt) patch.briefing_attended_at = data.briefingAttendedAt;
+      if (data.tags && Object.keys(data.tags).length > 0) patch.tags = data.tags;
+      if (Object.keys(patch).length > 0) {
         await SupabaseClient
           .from('customers')
-          .update({ briefing_attended_at: data.briefingAttendedAt })
+          .update(patch)
           .eq('id', existingId);
       }
       return existingId;
@@ -186,6 +189,7 @@ const DataWriter = (() => {
         lat:                   data.lat      || null,
         lng:                   data.lng      || null,
         briefing_attended_at:  data.briefingAttendedAt || null,
+        tags:                  data.tags     || {},
       })
       .select('id')
       .single();
@@ -218,6 +222,7 @@ const DataWriter = (() => {
       lat:                 data.lat,
       lng:                 data.lng,
       briefingAttendedAt:  data.briefingAttendedAt,
+      tags:                data.customerTags,
     });
     const locationId   = await _defaultLocationId(data.locationCode);
     const vehicleDbId  = data.vehicleId ? await _vehicleIdByCode(data.vehicleId) : null;

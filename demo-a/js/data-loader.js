@@ -287,6 +287,34 @@ const DataLoader = (() => {
     console.log(`[DataLoader] communities: ${MockData.COMMUNITIES.length} 筆`);
   }
 
+  async function loadCustomerTags() {
+    const { data, error } = await SupabaseClient
+      .from('customer_tags')
+      .select('*')
+      .eq('is_active', true)
+      .order('category')
+      .order('sort_order');
+    if (error) {
+      console.warn('[DataLoader] loadCustomerTags skipped:', error.message);
+      MockData.CUSTOMER_TAGS = {};
+      return;
+    }
+    // 整理成 { age: [...], family: [...], home_style: [...], friendliness: [...], impression: [...] }
+    const grouped = { age: [], family: [], home_style: [], friendliness: [], impression: [] };
+    (data || []).forEach(t => {
+      if (!grouped[t.category]) grouped[t.category] = [];
+      grouped[t.category].push({
+        code: t.code,
+        description: t.description,
+        sort_order: t.sort_order,
+      });
+    });
+    MockData.CUSTOMER_TAGS = grouped;
+    console.log('[DataLoader] customer_tags loaded:', Object.fromEntries(
+      Object.entries(grouped).map(([k, v]) => [k, v.length])
+    ));
+  }
+
   async function loadGroupPurchases() {
     const { data, error } = await SupabaseClient
       .from('group_purchases')
@@ -356,6 +384,7 @@ const DataLoader = (() => {
     // 對齊 Ragic schema 的新表
     await loadCommunities();
     await loadGroupPurchases();
+    await loadCustomerTags();
 
     const elapsed = Date.now() - t0;
     console.log(`[DataLoader] ✅ 全部載入完成 (${elapsed}ms)`, {
@@ -371,6 +400,7 @@ const DataLoader = (() => {
     loadLocations,
     loadCommunities,
     loadGroupPurchases,
+    loadCustomerTags,
     loadDailyAssignmentsForDate,
     mapEnum,
     ENUM_MAP,

@@ -227,6 +227,21 @@ const NewInquiryModal = (() => {
             </div>
           </section>
 
+          <!-- 區塊 客戶屬性 (選填) -->
+          <section class="form-section" style="grid-column:1 / -1;">
+            <div class="form-section-title">🏷️ 客戶屬性（選填）</div>
+            <div class="form-section-body" style="display:flex; flex-direction:column; gap:10px;">
+              <div class="form-hint" style="margin-bottom:2px;">點選下方按鈕，會自動加到「已選」區塊。最後一起儲存。</div>
+              <div id="tags-options" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:10px; padding:10px; background:#F9FAFB; border-radius:6px;"></div>
+              <div>
+                <div style="font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">✅ 已選擇</div>
+                <div id="tags-selected" style="display:flex; flex-wrap:wrap; gap:6px; min-height:36px; padding:8px; background:white; border:1px dashed #D1D5DB; border-radius:6px;">
+                  <span style="color:#9CA3AF; font-size:13px;">尚未選擇</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
           <!-- 區塊 4: 備註 -->
           <section class="form-section">
             <div class="form-section-title">📝 備註</div>
@@ -411,6 +426,188 @@ const NewInquiryModal = (() => {
     csDurSel.onchange  = updateDurationHint;
     updateDurationHint();
 
+    // ========== 客戶屬性 (tags) ==========
+    const tagsState = {
+      age: null,           // 單選 string
+      family: [],          // 多選 array
+      home_style: null,    // 單選
+      friendliness: null,  // 單選 (1-5)
+      impression: null,    // 單選 (1-5)
+    };
+
+    const TAG_CATEGORIES = [
+      { key: 'age',          label: '年齡',   multi: false },
+      { key: 'family',       label: '成員',   multi: true },
+      { key: 'home_style',   label: '風格',   multi: false },
+      { key: 'friendliness', label: '親切度', multi: false },
+      { key: 'impression',   label: '印象',   multi: false },
+    ];
+
+    function _renderTagsPanel() {
+      const tagsOpts = div.querySelector('#tags-options');
+      if (!tagsOpts) return;
+      const dict = MockData.CUSTOMER_TAGS || {};
+
+      tagsOpts.innerHTML = TAG_CATEGORIES.map(cat => {
+        const options = dict[cat.key] || [];
+        return `
+          <div>
+            <div style="font-weight:700; font-size:13px; color:#374151; margin-bottom:6px; text-align:center;">${cat.label}</div>
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              ${options.map(o => `
+                <button type="button" class="tag-opt-btn" data-cat="${cat.key}" data-code="${o.code}" data-desc="${o.description}"
+                  style="padding:6px 8px; background:white; border:1px solid #D1D5DB; border-radius:6px; cursor:pointer; font-size:12px; text-align:center; transition:all 0.1s;">
+                  ${o.description}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 綁定 click
+      tagsOpts.querySelectorAll('.tag-opt-btn').forEach(btn => {
+        btn.onclick = () => {
+          const cat = btn.dataset.cat;
+          const code = btn.dataset.code;
+          const desc = btn.dataset.desc;
+          const catDef = TAG_CATEGORIES.find(c => c.key === cat);
+
+          if (catDef.multi) {
+            // 多選 toggle
+            if (tagsState[cat].includes(code)) {
+              tagsState[cat] = tagsState[cat].filter(x => x !== code);
+            } else {
+              tagsState[cat] = [...tagsState[cat], code];
+            }
+          } else {
+            // 單選: 點同個 code 取消，點別的覆蓋
+            tagsState[cat] = (tagsState[cat] === code) ? null : code;
+          }
+          _renderTagsSelected();
+          _updateBtnHighlight();
+        };
+      });
+
+      _updateBtnHighlight();
+    }
+
+    function _updateBtnHighlight() {
+      div.querySelectorAll('.tag-opt-btn').forEach(btn => {
+        const cat = btn.dataset.cat;
+        const code = btn.dataset.code;
+        const catDef = TAG_CATEGORIES.find(c => c.key === cat);
+        const selected = catDef.multi
+          ? tagsState[cat].includes(code)
+          : tagsState[cat] === code;
+        if (selected) {
+          btn.style.background = '#3B82F6';
+          btn.style.color = 'white';
+          btn.style.borderColor = '#3B82F6';
+          btn.style.fontWeight = '600';
+        } else {
+          btn.style.background = 'white';
+          btn.style.color = '#374151';
+          btn.style.borderColor = '#D1D5DB';
+          btn.style.fontWeight = '400';
+        }
+      });
+    }
+
+    function _renderTagsSelected() {
+      const pool = div.querySelector('#tags-selected');
+      const hint = div.querySelector('#tags-empty-hint');
+      if (!pool) return;
+
+      const chips = [];
+      TAG_CATEGORIES.forEach(cat => {
+        const val = tagsState[cat.key];
+        if (!val || (Array.isArray(val) && val.length === 0)) return;
+
+        const codes = Array.isArray(val) ? val : [val];
+        codes.forEach(code => {
+          const dict = (MockData.CUSTOMER_TAGS || {})[cat.key] || [];
+          const opt = dict.find(o => o.code === code);
+          const desc = opt ? opt.description : code;
+          chips.push(`
+            <span style="display:inline-flex; align-items:center; gap:4px; padding:4px 8px; background:#3B82F6; color:white; border-radius:14px; font-size:12px;">
+              <span style="font-weight:600; opacity:0.8;">${cat.label}:</span>
+              <span>${desc}</span>
+              <button type="button" class="tag-rm-btn" data-cat="${cat.key}" data-code="${code}"
+                style="background:none; border:none; color:white; cursor:pointer; padding:0 0 0 4px; font-size:13px;">×</button>
+            </span>
+          `);
+        });
+      });
+
+      if (chips.length === 0) {
+        pool.innerHTML = '<span style="color:#9CA3AF; font-size:13px;">尚未選擇</span>';
+      } else {
+        pool.innerHTML = chips.join('');
+        // 綁定移除按鈕
+        pool.querySelectorAll('.tag-rm-btn').forEach(btn => {
+          btn.onclick = () => {
+            const cat = btn.dataset.cat;
+            const code = btn.dataset.code;
+            const catDef = TAG_CATEGORIES.find(c => c.key === cat);
+            if (catDef.multi) {
+              tagsState[cat] = tagsState[cat].filter(x => x !== code);
+            } else {
+              tagsState[cat] = null;
+            }
+            _renderTagsSelected();
+            _updateBtnHighlight();
+          };
+        });
+      }
+    }
+
+    _renderTagsPanel();
+
+    // 將 tagsState 暴露讓 submit 抓
+    div._tagsState = tagsState;
+
+    // ========== 防呆 A：攔截 Enter 鍵避免誤送 ==========
+    // 在非 textarea 的輸入框按 Enter 不會觸發 submit，必須點按鈕
+    div.querySelector('#new-inquiry-form').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    });
+
+    // ========== 防呆 B：送出前確認視窗 helper ==========
+    function _showSubmitConfirm(summary) {
+      return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:99999; display:flex; align-items:center; justify-content:center;';
+        const v = (x) => x && String(x).trim() ? `<strong>${x}</strong>` : '<span style="color:#9CA3AF;">(未填)</span>';
+        overlay.innerHTML = `
+          <div style="background:white; border-radius:10px; padding:24px; max-width:440px; width:90%; box-shadow:0 12px 48px rgba(0,0,0,0.25);">
+            <div style="font-size:17px; font-weight:700; color:#111827; margin-bottom:14px;">
+              📋 確認送出諮詢？
+            </div>
+            <div style="font-size:13px; color:#6B7280; margin-bottom:10px;">請再次確認以下資訊：</div>
+            <div style="font-size:14px; color:#374151; line-height:1.9; background:#F9FAFB; border-radius:6px; padding:12px 14px; margin-bottom:18px;">
+              <div>👤 客戶：${v(summary.customer)}　📞 ${v(summary.phone)}</div>
+              <div>🛠 類型：${v(summary.type)}　性質：${v(summary.nature)}</div>
+              <div>📍 地址：${v(summary.address)}</div>
+              <div>🏢 分區：${v(summary.branch)}</div>
+              <div>🏷️ 客戶屬性：${summary.tagsCount > 0 ? `<strong>${summary.tagsCount} 項</strong>` : '<span style="color:#9CA3AF;">無</span>'}</div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button type="button" id="ic-cancel" style="padding:9px 18px; background:white; border:1px solid #D1D5DB; border-radius:6px; color:#374151; cursor:pointer; font-size:14px;">回去繼續填寫</button>
+              <button type="button" id="ic-ok" style="padding:9px 18px; background:#3B82F6; border:none; border-radius:6px; color:white; cursor:pointer; font-size:14px; font-weight:600;">確認儲存</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+        const done = (ok) => { overlay.remove(); resolve(ok); };
+        overlay.querySelector('#ic-cancel').onclick = () => done(false);
+        overlay.querySelector('#ic-ok').onclick = () => done(true);
+        overlay.onclick = (e) => { if (e.target === overlay) done(false); };
+      });
+    }
+
     div.querySelector('#new-inquiry-form').onsubmit = async (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
@@ -473,6 +670,20 @@ const NewInquiryModal = (() => {
         locationName: branchObj ? branchObj.name : null,
       };
 
+      // ========== 防呆 B：先彈確認視窗 ==========
+      const tagsCount = Object.values(div._tagsState || {})
+        .reduce((acc, v) => acc + (Array.isArray(v) ? v.length : (v ? 1 : 0)), 0);
+      const confirmed = await _showSubmitConfirm({
+        customer: newCase.customer,
+        phone:    newCase.phone,
+        type:     newCase.type,
+        nature:   caseNature === 'normal' ? '一般' : caseNature,
+        address:  newCase.address,
+        branch:   branchObj ? branchObj.name : branchCode,
+        tagsCount,
+      });
+      if (!confirmed) return;  // 使用者按「回去繼續填寫」
+
       const submitBtn = e.target.querySelector('button[type="submit"]');
       const origText = submitBtn.innerText;
       submitBtn.disabled = true;
@@ -499,6 +710,7 @@ const NewInquiryModal = (() => {
           floorPlan:           floorPlan,
           communityCode:       communityCode,
           groupPurchaseCode:   groupPurchaseCode,
+          customerTags:        div._tagsState || {},
         });
         newCase._dbId = dbId;
         MockData.CASES.push(newCase);
