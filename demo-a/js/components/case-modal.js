@@ -135,7 +135,8 @@ const CaseModalComponent = (() => {
         <div class="mt-6 pt-4 border-t" style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
           <button class="close-btn" style="padding:8px 16px; border:1px solid #D1D5DB; border-radius:6px; background:white; cursor:pointer;">關閉</button>
           <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-            <button id="reschedule-btn" style="padding:8px 12px; background:#F59E0B; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px;">🔄 更改時程</button>
+            <button id="edit-inquiry-btn" style="padding:8px 12px; background:white; color:#374151; border:1px solid #D1D5DB; border-radius:6px; cursor:pointer; font-size:13px;">編輯諮詢</button>
+            <button id="reschedule-btn" style="padding:8px 12px; background:#F59E0B; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px;">更改時程</button>
             <select id="status-changer" style="padding:6px 10px; border:1px solid #D1D5DB; border-radius:6px; font-size:13px;"></select>
             <button id="update-status-btn" style="padding:8px 16px; background:#2563EB; color:white; border:none; border-radius:6px; cursor:pointer;">更新狀態</button>
           </div>
@@ -149,6 +150,21 @@ const CaseModalComponent = (() => {
 
     const rescheduleBtn = div.querySelector('#reschedule-btn');
     if (rescheduleBtn) rescheduleBtn.onclick = _reschedule;
+
+    const editBtn = div.querySelector('#edit-inquiry-btn');
+    if (editBtn) editBtn.onclick = _editInquiry;
+  }
+
+  /** 編輯諮詢 — 重用 NewInquiryModal 的編輯模式 */
+  function _editInquiry() {
+    const id = State.get('selectedCaseId');
+    if (!id) return;
+    close();
+    if (typeof NewInquiryModal !== 'undefined') {
+      NewInquiryModal.open({ editCaseId: id });
+    } else {
+      alert('NewInquiryModal 尚未載入');
+    }
   }
 
   /** 更改時程 — 把該案件當成 newCase 重新跑建議 */

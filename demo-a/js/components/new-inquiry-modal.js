@@ -12,15 +12,122 @@ const NewInquiryModal = (() => {
 
   const MODAL_ID = 'new-inquiry-modal';
 
-  function open() {
+  function open(options = {}) {
     _ensureModal();
     document.getElementById('new-inquiry-form').reset();
     document.getElementById(MODAL_ID).style.display = 'flex';
+    // 重設編輯橫幅
+    const banner = document.getElementById('inquiry-edit-banner');
+    if (banner) { banner.style.display = 'none'; banner.textContent = ''; }
+    const form = document.getElementById('new-inquiry-form');
+    if (form) {
+      delete form.dataset.editCaseId;
+      delete form.dataset.editCustomerId;
+    }
+    if (options.editCaseId) {
+      _enterEditMode(options.editCaseId);
+    }
   }
 
   function close() {
     const el = document.getElementById(MODAL_ID);
     if (el) el.style.display = 'none';
+  }
+
+  /**
+   * 進入「編輯諮詢」模式：從 DB 撈案件 + 客戶完整資料，預填表單、改 UI
+   */
+  async function _enterEditMode(caseCode) {
+    const div = document.getElementById(MODAL_ID);
+    const form = document.getElementById('new-inquiry-form');
+    if (!div || !form) return;
+
+    // 1. 從 DB 拿完整案件 + 客戶資料（含 tags）
+    let caseRow;
+    try {
+      const { data, error } = await SupabaseClient
+        .from('cases')
+        .select(`
+          *,
+          customer:customers(id, name, phone, address, tags),
+          location:company_locations(code, name)
+        `)
+        .eq('code', caseCode)
+        .single();
+      if (error) throw error;
+      caseRow = data;
+    } catch (err) {
+      console.error('[編輯諮詢] 撈案件失敗', err);
+      alert('找不到案件 ' + caseCode + '：' + err.message);
+      close();
+      return;
+    }
+
+    const cust = caseRow.customer || {};
+    const tags = cust.tags || {};
+
+    // 2. 改標題 / 副標 / 警示橫幅
+    const titleEl = document.getElementById('inquiry-title');
+    if (titleEl) titleEl.textContent = `編輯諮詢（${caseCode}）`;
+    const subEl = document.getElementById('inquiry-subtitle');
+    if (subEl) subEl.textContent = `修改客戶 / 案件資訊。排程相關請走「更改時程」。`;
+    const banner = document.getElementById('inquiry-edit-banner');
+    if (banner) {
+      const isScheduled = caseRow.scheduled_date && caseRow.scheduled_start;
+      if (isScheduled) {
+        banner.textContent = '⚠ 此案件已排程。如改服務類型 / 性質，請至「更改時程」重新評估時段。';
+        banner.style.display = 'block';
+      }
+    }
+
+    // 3. 改按鈕文字
+    const submitBtn = document.getElementById('inquiry-submit-btn');
+    if (submitBtn) submitBtn.textContent = '儲存變更';
+
+    // 4. 隱藏排程相關 section（Q4：編輯不含排程）
+    const schedSec = document.getElementById('inquiry-schedule-section');
+    if (schedSec) schedSec.style.display = 'none';
+
+    // 5. 預填基本欄位（DB enum 英 → UI 中）
+    const mapEnum = (DataLoader && DataLoader.mapEnum) || ((cat, v) => v);
+    form.elements['customer'].value = cust.name  || '';
+    form.elements['phone'].value    = cust.phone || '';
+    form.elements['address'].value  = caseRow.address || '';
+    if (form.elements['source'])     form.elements['source'].value     = mapEnum('case_source', caseRow.source) || '';
+    if (form.elements['type'])       form.elements['type'].value       = mapEnum('case_type',   caseRow.case_type) || '';
+    if (form.elements['case_nature']) form.elements['case_nature'].value = caseRow.case_nature || 'normal';
+    if (form.elements['venue_type']) form.elements['venue_type'].value = caseRow.venue_type || '';
+    if (form.elements['floor_plan']) form.elements['floor_plan'].value = caseRow.floor_plan || '';
+    if (form.elements['notes'])      form.elements['notes'].value      = caseRow.notes || '';
+    if (form.elements['branch'] && caseRow.location)
+      form.elements['branch'].value = caseRow.location.code || '';
+
+    // 社區 / 團購：用 _dbId 找出 code
+    if (form.elements['community'] && caseRow.community_id) {
+      const community = (MockData.COMMUNITIES || []).find(c => c._dbId === caseRow.community_id);
+      if (community) form.elements['community'].value = community.code;
+    }
+    if (form.elements['group_purchase'] && caseRow.group_purchase_id) {
+      const gp = (MockData.GROUP_PURCHASES || []).find(g => g._dbId === caseRow.group_purchase_id);
+      if (gp) form.elements['group_purchase'].value = gp.code;
+    }
+
+    // 6. 預填 🏷️ 客戶屬性 tagsState
+    const ts = div._tagsState;
+    if (ts) {
+      Object.keys(ts).forEach(k => {
+        if (Array.isArray(ts[k])) {
+          ts[k] = Array.isArray(tags[k]) ? [...tags[k]] : [];
+        } else {
+          ts[k] = (tags[k] !== undefined && !Array.isArray(tags[k])) ? tags[k] : null;
+        }
+      });
+    }
+    if (div._reRenderTags) div._reRenderTags();
+
+    // 7. 在 form 上掛 editCaseId / customerId 給 submit handler 用
+    form.dataset.editCaseId = caseCode;
+    form.dataset.editCustomerId = cust.id || '';
   }
 
   function _ensureModal() {
@@ -37,8 +144,9 @@ const NewInquiryModal = (() => {
       <div class="modal-content" style="padding:24px; max-width:980px; max-height:90vh; overflow-y:auto;">
         <div style="display:flex; justify-content:space-between; align-items:start; margin-bottom:16px;">
           <div>
-            <h2 style="font-size:var(--fs-lg); font-weight:700;">+ 新增諮詢</h2>
-            <p style="font-size:var(--fs-xs); color:var(--c-text-mute); margin-top:2px;">客戶剛進線、還沒約時間 · 進到「未排案件」</p>
+            <h2 id="inquiry-title" style="font-size:var(--fs-lg); font-weight:700;">+ 新增諮詢</h2>
+            <p id="inquiry-subtitle" style="font-size:var(--fs-xs); color:var(--c-text-mute); margin-top:2px;">客戶剛進線、還沒約時間 · 進到「未排案件」</p>
+            <div id="inquiry-edit-banner" style="display:none; margin-top:8px; padding:8px 12px; background:#FEF3C7; border-left:3px solid #F59E0B; border-radius:4px; font-size:12px; color:#92400E;"></div>
           </div>
           <button class="close-btn" style="background:none; border:none; font-size:24px; color:#9CA3AF; cursor:pointer;">×</button>
         </div>
@@ -154,7 +262,7 @@ const NewInquiryModal = (() => {
           </section>
 
           <!-- 區塊 3: 排程資訊 -->
-          <section class="form-section">
+          <section class="form-section" id="inquiry-schedule-section">
             <div class="form-section-title">⏰ 排程資訊</div>
             <div class="form-section-body" style="display:flex; flex-direction:column; gap:12px;">
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -258,7 +366,7 @@ const NewInquiryModal = (() => {
 
           <div style="display:flex; justify-content:space-between; padding-top:8px; border-top:1px solid var(--c-border);">
             <button type="button" class="close-btn btn-secondary">取消</button>
-            <button type="submit" class="btn-primary">建立諮詢</button>
+            <button type="submit" id="inquiry-submit-btn" class="btn-primary">建立諮詢</button>
           </div>
         </form>
       </div>
@@ -564,8 +672,9 @@ const NewInquiryModal = (() => {
 
     _renderTagsPanel();
 
-    // 將 tagsState 暴露讓 submit 抓
+    // 將 tagsState 暴露讓 submit / 編輯模式抓
     div._tagsState = tagsState;
+    div._reRenderTags = () => { _renderTagsPanel(); _renderTagsSelected(); };
 
     // ========== 防呆 A：攔截 Enter 鍵避免誤送 ==========
     // 在非 textarea 的輸入框按 Enter 不會觸發 submit，必須點按鈕
@@ -689,41 +798,89 @@ const NewInquiryModal = (() => {
       submitBtn.disabled = true;
       submitBtn.innerText = '建立中...';
 
-      try {
-        // ⭐ 寫到 DB
-        const dbId = await DataWriter.createCase({
-          code:        newId,
-          locationCode: branchCode,
-          customer: { name: newCase.customer, phone: newCase.phone },
-          phone:    newCase.phone,
-          address:  newCase.address,
-          lat:      newCase.lat,
-          lng:      newCase.lng,
-          type:     newCase.type,
-          status:   newCase.status,
-          source:   newCase.source,
-          duration:            newCase.duration,
-          notes:               newCase.notes,
-          caseNature:          caseNature,
-          briefingAttendedAt:  briefingDate,
-          venueType:           venueType,
-          floorPlan:           floorPlan,
-          communityCode:       communityCode,
-          groupPurchaseCode:   groupPurchaseCode,
-          customerTags:        div._tagsState || {},
-        });
-        newCase._dbId = dbId;
-        MockData.CASES.push(newCase);
-        close();
+      const editCaseId = e.target.dataset.editCaseId || null;
 
-        setTimeout(() => {
-          if (confirm(`✅ 已建立諮詢：${newCase.customer}\n\n要立即跳到「📋 未排案件」查看嗎？`)) {
-            Router.navigate('unscheduled');
+      try {
+        if (editCaseId) {
+          // ===== 編輯模式：UPDATE =====
+          submitBtn.innerText = '儲存中...';
+          await DataWriter.updateInquiry(editCaseId, {
+            customerName:       newCase.customer,
+            customerPhone:      newCase.phone,
+            customerTags:       div._tagsState || {},
+            address:            newCase.address,
+            type:               newCase.type,
+            source:             newCase.source,
+            caseNature:         caseNature,
+            venueType:          venueType,
+            floorPlan:          floorPlan,
+            communityCode:      communityCode,
+            groupPurchaseCode:  groupPurchaseCode,
+            notes:              newCase.notes,
+            locationCode:       branchCode,
+          });
+
+          // 同步更新 MockData 對應那筆，畫面可以立即反映
+          const idx = MockData.CASES.findIndex(c => c.id === editCaseId);
+          if (idx >= 0) {
+            const orig = MockData.CASES[idx];
+            MockData.CASES[idx] = {
+              ...orig,
+              customer:  newCase.customer,
+              phone:     newCase.phone,
+              address:   newCase.address,
+              type:      newCase.type,
+              source:    newCase.source,
+              case_nature: caseNature,
+              notes:     newCase.notes,
+              locationCode: branchCode,
+              locationName: branchObj ? branchObj.name : orig.locationName,
+            };
           }
-        }, 100);
+
+          close();
+          setTimeout(() => {
+            alert(`✅ 已儲存：${newCase.customer}`);
+            // 重整當前路由讓畫面拿到最新資料
+            if (typeof Router !== 'undefined' && Router.refresh) Router.refresh();
+            else location.reload();
+          }, 100);
+        } else {
+          // ===== 新增模式：INSERT（原邏輯） =====
+          const dbId = await DataWriter.createCase({
+            code:        newId,
+            locationCode: branchCode,
+            customer: { name: newCase.customer, phone: newCase.phone },
+            phone:    newCase.phone,
+            address:  newCase.address,
+            lat:      newCase.lat,
+            lng:      newCase.lng,
+            type:     newCase.type,
+            status:   newCase.status,
+            source:   newCase.source,
+            duration:            newCase.duration,
+            notes:               newCase.notes,
+            caseNature:          caseNature,
+            briefingAttendedAt:  briefingDate,
+            venueType:           venueType,
+            floorPlan:           floorPlan,
+            communityCode:       communityCode,
+            groupPurchaseCode:   groupPurchaseCode,
+            customerTags:        div._tagsState || {},
+          });
+          newCase._dbId = dbId;
+          MockData.CASES.push(newCase);
+          close();
+
+          setTimeout(() => {
+            if (confirm(`✅ 已建立諮詢：${newCase.customer}\n\n要立即跳到「📋 未排案件」查看嗎？`)) {
+              Router.navigate('unscheduled');
+            }
+          }, 100);
+        }
       } catch (err) {
-        console.error('[new-inquiry] createCase failed:', err);
-        alert('儲存到 DB 失敗：' + err.message);
+        console.error('[new-inquiry] submit failed:', err);
+        alert((editCaseId ? '更新失敗：' : '儲存到 DB 失敗：') + err.message);
         submitBtn.disabled = false;
         submitBtn.innerText = origText;
       }

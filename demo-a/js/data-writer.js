@@ -353,6 +353,93 @@ const DataWriter = (() => {
   }
 
   /**
+   * 編輯諮詢 — 同時更新 customer + case 多個欄位
+   *
+   * @param {string} caseCode 業務代號 'I20260529-xxxxxx'
+   * @param {object} payload {
+   *   // customer 層級
+   *   customerName, customerPhone, customerTags,
+   *   // case 層級
+   *   address, type, source, caseNature, venueType, floorPlan,
+   *   communityCode, groupPurchaseCode, notes, locationCode
+   * }
+   */
+  async function updateInquiry(caseCode, payload) {
+    // 1. 找到 case + customer_id
+    const { data: caseRow, error: e1 } = await SupabaseClient
+      .from('cases')
+      .select('id, customer_id')
+      .eq('code', caseCode)
+      .single();
+    if (e1) throw e1;
+    if (!caseRow) throw new Error('找不到案件 ' + caseCode);
+
+    // 2. UPDATE customers（姓名、電話、tags；不動既有 address — 那是預設地址）
+    if (caseRow.customer_id) {
+      const custPatch = {};
+      if (payload.customerName  !== undefined) custPatch.name  = payload.customerName;
+      if (payload.customerPhone !== undefined) custPatch.phone = payload.customerPhone;
+      if (payload.customerTags  !== undefined) custPatch.tags  = payload.customerTags || {};
+      if (Object.keys(custPatch).length > 0) {
+        const { error: e2 } = await SupabaseClient
+          .from('customers')
+          .update(custPatch)
+          .eq('id', caseRow.customer_id);
+        if (e2) throw e2;
+      }
+    }
+
+    // 3. UPDATE cases
+    const casePatch = {};
+    if (payload.address       !== undefined) casePatch.address     = payload.address || '';
+    if (payload.type          !== undefined) casePatch.case_type   = reverseEnum('case_type',   payload.type);
+    if (payload.source        !== undefined) casePatch.source      = reverseEnum('case_source', payload.source);
+    if (payload.caseNature    !== undefined) casePatch.case_nature = payload.caseNature || 'normal';
+    if (payload.venueType     !== undefined) casePatch.venue_type  = payload.venueType || null;
+    if (payload.floorPlan     !== undefined) casePatch.floor_plan  = payload.floorPlan || null;
+    if (payload.notes         !== undefined) casePatch.notes       = payload.notes || null;
+
+    // location 用 code 查 UUID
+    if (payload.locationCode) {
+      const { data: loc } = await SupabaseClient
+        .from('company_locations')
+        .select('id')
+        .eq('code', payload.locationCode)
+        .single();
+      if (loc) casePatch.location_id = loc.id;
+    }
+
+    // 社區 / 團購 用 _dbId 直接帶（找不到就設 null）
+    if (payload.communityCode !== undefined) {
+      if (!payload.communityCode) {
+        casePatch.community_id = null;
+      } else {
+        const community = (MockData.COMMUNITIES || []).find(c => c.code === payload.communityCode);
+        casePatch.community_id = community && community._dbId ? community._dbId : null;
+      }
+    }
+    if (payload.groupPurchaseCode !== undefined) {
+      if (!payload.groupPurchaseCode) {
+        casePatch.group_purchase_id = null;
+      } else {
+        const gp = (MockData.GROUP_PURCHASES || []).find(g => g.code === payload.groupPurchaseCode);
+        casePatch.group_purchase_id = gp && gp._dbId ? gp._dbId : null;
+      }
+    }
+
+    if (Object.keys(casePatch).length > 0) {
+      const { error: e3 } = await SupabaseClient
+        .from('cases')
+        .update(casePatch)
+        .eq('id', caseRow.id);
+      if (e3) throw e3;
+    }
+
+    console.log(`[DataWriter] inquiry ${caseCode} updated`, { custPatchKeys: Object.keys(payload), casePatchKeys: Object.keys(casePatch) });
+    return caseRow.id;
+  }
+
+  /**
    * 軟刪除案件
    */
   async function deleteCase(caseCode) {
@@ -614,6 +701,7 @@ const DataWriter = (() => {
     updateCaseStatus,
     updateCaseSchedule,
     updateCaseRaw,
+    updateInquiry,
     deleteCase,
     // 車輛
     createVehicle,
